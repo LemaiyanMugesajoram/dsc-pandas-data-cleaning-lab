@@ -98,11 +98,10 @@ import matplotlib.pyplot as plt
 In the cell below, load `heroes_information.csv` as `heroes_df`:
 
 
-```python
+python
 # Your code here
-
+heroes_df = pd.read_csv("heroes_information.csv")
 heroes_df.head()
-```
 
 It looks like that CSV came with an index column, resulting in an extra column called `Unnamed: 0`. We don't need that column, so write code to get rid of it below.
 
@@ -112,16 +111,16 @@ There are two ways to do this:
 2. Drop the column `Unnamed: 0` with `axis=1`
 
 
-```python
+python
 # Your code here
-
+heroes_df.drop(columns="Unnamed: 0", inplace=True)
 heroes_df.head()
-```
+
 
 The following code checks that the dataframe was loaded correctly.
 
 
-```python
+python
 # Run this cell without changes
 
 # There should be 734 rows
@@ -144,7 +143,6 @@ assert list(heroes_df.columns) == [
     "Alignment",
     "Weight",
 ]
-```
 
 Now you want to get familiar with the data.  This step includes:
 
@@ -156,41 +154,41 @@ Now you want to get familiar with the data.  This step includes:
 In the cell below, inspect the overall shape of the dataframe:
 
 
-```python
+python
 # Your code here
-```
+heroes_df.shape
 
 Now let's look at the info printout:
 
 
-```python
+python
 # Run this cell without changes
 heroes_df.info()
-```
 
 In the cell below, interpret that information. Do the data types line up with what we expect? Are there any missing values?
 
 
-```python
+python
 # Replace None with appropriate text
 """
-None
+The data types look correct. Height and Weight are numbers, and the rest are text. Some columns have missing values, especially Race, Gender, Hair color, and Skin color. We'll need to handle those missing values before analysis.
 """
-```
+
 
 ### Superpowers
 
 Now, repeat the same process with `super_hero_powers.csv`. Name the dataframe `powers_df`. This time, make sure you use `index_col=0` when opening the CSV because the index contains important information.
 
 
-```python
+python
 # Your code here (create more cells as needed)
-```
+powers_df = pd.read_csv("super_hero_powers.csv", index_col=0)
+powers_df.head()
 
 The following code will check if it was loaded correctly:
 
 
-```python
+python
 # Run this cell without changes
 
 # There should be 167 rows, 667 columns
@@ -207,7 +205,7 @@ assert powers_df.index[0] == "Agility"
 
 # The last index should be 'Omniscient'
 assert powers_df.index[-1] == "Omniscient"
-```
+
 
 ## 2. Perform Data Cleaning Required to Answer First Question
 
@@ -220,22 +218,22 @@ To answer this question, we will only need to use `heroes_df`, which contains th
 As you likely noted above, the `Publisher` column is missing some values. Let's take a look at some samples with and without missing publisher values:
 
 
-```python
+python
 # Run this cell without changes
 has_publisher_sample = heroes_df[heroes_df["Publisher"].notna()].sample(
     5, random_state=1
 )
 has_publisher_sample
-```
 
 
-```python
+
+python
 # Run this cell without changes
 missing_publisher_sample = heroes_df[heroes_df["Publisher"].isna()].sample(
     5, random_state=1
 )
 missing_publisher_sample
-```
+
 
 What do we want to do about these missing values?
 
@@ -247,27 +245,30 @@ Recall that there are two general strategies for dealing with missing values:
 Write your answer below, and explain how it relates to the information we have:
 
 
-```python
+python
 # Replace None with appropriate text
 """
-None
+ Rows with missing Publisher values can't be counted toward any group, so it makes sense to drop them. Filling them with something like "Unknown" would create a separate, unhelpful category.
+
 """
-```
+
 
 Now, implement the strategy to drop rows with missing values using code. (You can also check the solution branch for the answer to the question above if you're really not sure.)
 
 
-```python
+python
 # Your code here
-```
+heroes_df = heroes_df[heroes_df["Publisher"].notna()]
+heroes_df["Publisher"].isna().sum() 
+heroes_df.shape
 
 Now there should be no missing values in the publisher column:
 
 
-```python
+python
 # Run this cell without changes
 assert heroes_df["Publisher"].isna().sum() == 0
-```
+
 
 ### Identifying and Handling Text Data Requiring Cleaning
 
@@ -276,37 +277,38 @@ The overall field of natural language processing (NLP) is quite broad, and we're
 Let's take a look at the counts of heroes grouped by publisher:
 
 
-```python
+python
 # Run this cell without changes
 heroes_df["Publisher"].value_counts()
-```
 
 There are two cases where we appear to have data entry issues, and publishers that should be encoded the same have not been. In other words, there are four categories present that really should be counted as two categories (and you do not need specific comic book knowledge to be able to identify them).
 
 Identify those two cases below:
 
 
-```python
+python
 # Replace None with appropriate text
 """
-None
+ "Marvel Comics" and "Marvel comics" appears twice.
+ "DC Comics" and "Dc Comics" appears twice.
 """
-```
+
 
 Now, write some code to handle these cases. If you're not sure where to start, look at the pandas documentation for [replacing values](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.replace.html) and [stripping off whitespace](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.str.strip.html).
 
 
-```python
+python
 # Your code here
-```
+heroes_df["Publisher"] = heroes_df["Publisher"].str.strip()
+heroes_df["Publisher"] = heroes_df["Publisher"].replace("Marvel", "Marvel Comics")
 
 Check your work below:
 
 
-```python
+python
 # Run this cell without changes
 heroes_df["Publisher"].value_counts()
-```
+
 
 ### Answering the Question
 
@@ -315,7 +317,7 @@ Now we should be able to answer *What is the distribution of superheroes by publ
 If your data cleaning was done correctly, this code should work without any further changes:
 
 
-```python
+python
 # Run this cell without changes
 
 # Set up plots
@@ -336,7 +338,7 @@ ax1.set_ylabel("Count of Superheroes")
 ax2.set_ylabel("Count of Superheroes")
 ax1.set_title("Distribution of Superheroes by Publisher")
 ax2.set_title("Top 5 Publishers by Count of Superheroes");
-```
+
 
 ## 3. Perform Data Aggregation and Cleaning Required to Answer Second Question
 
@@ -349,40 +351,52 @@ Unlike the previous question, we won't be able to answer this with just `heroes_
 First, identify the shared key between `heroes_df` and `powers_df`. (Shared key meaning, the values you want to join on.) Let's look at them again:
 
 
-```python
+python
 # Run this cell without changes
 heroes_df
-```
 
 
-```python
+
+python
 # Run this cell without changes
 powers_df
-```
+
 
 In the cell below, identify the shared key, and your strategy for joining the data (e.g. what will one record represent after you join, will you do a left/right/inner/outer join):
 
 
-```python
+python
 # Replace None with appropriate text
 """
-None
+The shared key between the two datasets is the superhero's name.
+
+In heroes_df, the superhero names are stored in the "name" column. In powers_df, the superhero names are used as the column names, and the index contains power names. 
+
+To join the data, we should first transpose powers_df so that each row represents a superhero (instead of each column). Then, we can perform an inner join on the hero's name. Each record in the resulting DataFrame will represent a single superhero, including both their attributes and their powers.
+
 """
-```
 
 In the cell below, create a new dataframe called `heroes_and_powers_df` that contains the joined data. You can look at the above answer in the solution branch if you're not sure where to start.
 
 ***Hint:*** Note that the `.join` method requires that the two dataframes share an index ([documentation here](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.join.html)) whereas the `.merge` method can join using any columns ([documentation here](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.merge.html)). It is up to you which one you want to use.
 
 
-```python
+python
 # Your code here (create more cells as needed)
-```
+powers_transposed = powers_df.T
+
+heroes_and_powers_df = pd.merge(
+    heroes_df, 
+    powers_transposed, 
+    left_on="name", 
+    right_index=True,
+    how="inner"  
+)
 
 Run the code below to check your work:
 
 
-```python
+python
 # Run this cell without changes
 
 # Confirms you have created a DataFrame with the specified name
@@ -400,12 +414,12 @@ assert [power in heroes_and_powers_df.columns for power in powers_df.index]
 # modify this as well. We are checking that all of the attribute columns from
 # heroes_df are present as columns in the joined df)
 assert [attribute in heroes_and_powers_df.columns for attribute in heroes_df.columns]
-```
+
 
 Now that we have created a joined dataframe, we can aggregate the number of superpowers by superhero. This code is written for you:
 
 
-```python
+python
 # Run this cell without changes
 
 # Note: we can use sum() with True and False values and they will
@@ -414,14 +428,14 @@ heroes_and_powers_df["Power Count"] = sum(
     [heroes_and_powers_df[power_name] for power_name in powers_df.index]
 )
 heroes_and_powers_df
-```
+
 
 ### Answering the Question
 
 Now we can plot the height vs. the count of powers:
 
 
-```python
+`python
 # Run this cell without changes
 
 fig, ax = plt.subplots(figsize=(16, 8))
@@ -433,7 +447,7 @@ ax.scatter(
 ax.set_xlabel("Height (cm)")
 ax.set_ylabel("Number of Superpowers")
 ax.set_title("Height vs. Power Count");
-```
+
 
 Hmm...what is that stack of values off below zero? What is a "negative" height?
 
@@ -446,10 +460,10 @@ In this case, we are looking at heights, which are 1-dimensional, positive numbe
 Let's take a look at a sample of those negative heights:
 
 
-```python
+python
 # Run this cell without changes
 heroes_and_powers_df[heroes_and_powers_df["Height"] < 0].sample(5, random_state=1)
-```
+
 
 It looks like not only are those heights negative, those weights are negative also, and all of them are set to exactly -99.0.
 
@@ -458,18 +472,18 @@ It seems like this data source probably filled in -99.0 as the height or weight 
 Depending on the purpose of the analysis, maybe this would be a useful piece of information, but for our current question, let's go ahead and drop the records where the height is -99.0. We'll make a new temporary dataframe to make sure we don't accidentally delete anything that will be needed in a future question.
 
 
-```python
+python
 # Run this cell without changes
 question_2_df = heroes_and_powers_df[heroes_and_powers_df["Height"] != -99.0].copy()
 question_2_df
-```
+`
 
 ### Answering the Question, Again
 
 Now we can redo that plot without those negative heights:
 
 
-```python
+python
 # Run this cell without changes
 
 fig, ax = plt.subplots(figsize=(16, 8))
